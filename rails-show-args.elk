@@ -1,0 +1,28 @@
+; redirect_to
+
+(deftest "can get associated documentation for function symbol"
+  (assert-equal "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}" (rails-show-args-for-symbol 'redirect_to)))
+
+(deftest "can get associated documentation for function string"
+  (assert-equal "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}" (rails-show-args-for "redirect_to")))
+
+(deftest "can get associated documentation for function thing at point"
+  (save-excursion
+    (goto-line 1)
+    (end-of-line)
+    (assert-equal "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}" (rails-show-args-for-at-point))))
+
+(deftest "can tell you if the lookup failed"
+  (assert-t (rails-show-args-function-docs-exist 'redirect_to))
+  (assert-nil (rails-show-args-function-docs-exist 'poop)))
+
+(deftest "create two spaces"
+  (save-excursion
+    (end-of-buffer)
+    (rails-show-args-create-two-spaces-at-point)
+    (backward-char 2)
+    (assert-t (looking-at "  "))
+    (delete-char 2)))
+
+
+
