@@ -1,5 +1,14 @@
 ; redirect_to
 
+(defun after-point ()
+  (+ 1 (point)))
+
+(defun before-and-after (test)
+  (save-excursion
+    (set-buffer (generate-new-buffer "test-scratch"))
+    (funcall test)
+    (kill-buffer "test-scratch")))
+
 (setq redirect_to_doc "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}")
 
 (deftest "can get associated documentation for function symbol"
@@ -9,40 +18,31 @@
   (assert-equal redirect_to_doc (show-args-for "redirect_to")))
 
 (deftest "can get associated documentation for function thing at point"
-  (save-excursion
-    (goto-line 1)
-    (end-of-line)
-    (assert-equal redirect_to_doc (show-args-for-at-point))))
+  (before-and-after
+   (lambda()
+     (insert "redirect_to")
+     (assert-equal redirect_to_doc (show-args-for-at-point)))))
 
 (deftest "can tell you if the lookup failed"
   (assert-t (show-args-function-docs-exist 'redirect_to))
   (assert-nil (show-args-function-docs-exist 'poop)))
 
 (deftest "create two spaces"
-  (save-excursion
-    (end-of-buffer)
-
+  (before-and-after
+   (lambda()
     (show-args-create-two-spaces-at-point)
-    (assert-t (looking-at "  "))
-    (delete-char 2)))
+    (assert-t (looking-at "  ")))))
 
 (deftest "it will create an overlay at point"
-  (save-excursion
-    (end-of-buffer)
+  (before-and-after 
+   (lambda()
 
     (show-args-create-overlay-at-point)
-
-    (assert-nonnil (overlays-at (point)))
-    (delete-overlay (car (overlays-at (point))))
-    (delete-char 2)))
+    (assert-nonnil (overlays-at (after-point))))))
 
 (deftest "it will show the arguments in an overlay"
-  (save-excursion
-    (end-of-buffer)
-
-    (insert "redirect_to")
-    (show-args-create-functions-overlay-at-point) 
-    (assert-equal redirect_to_doc (overlay-get (car (overlays-at (point))) 'display))
-    (delete-overlay (car (overlays-at (point))))
-    (backward-char 11)
-    (delete-char 13)))
+  (before-and-after 
+   (lambda()
+     (insert "redirect_to")
+     (show-args-create-functions-overlay-at-point) 
+     (assert-equal redirect_to_doc (overlay-get (car (overlays-at (after-point))) 'display)))))
