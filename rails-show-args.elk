@@ -1,28 +1,48 @@
 ; redirect_to
 
+(setq redirect_to_doc "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}")
+
 (deftest "can get associated documentation for function symbol"
-  (assert-equal "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}" (rails-show-args-for-symbol 'redirect_to)))
+  (assert-equal redirect_to_doc (show-args-for-symbol 'redirect_to)))
 
 (deftest "can get associated documentation for function string"
-  (assert-equal "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}" (rails-show-args-for "redirect_to")))
+  (assert-equal redirect_to_doc (show-args-for "redirect_to")))
 
 (deftest "can get associated documentation for function thing at point"
   (save-excursion
     (goto-line 1)
     (end-of-line)
-    (assert-equal "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}" (rails-show-args-for-at-point))))
+    (assert-equal redirect_to_doc (show-args-for-at-point))))
 
 (deftest "can tell you if the lookup failed"
-  (assert-t (rails-show-args-function-docs-exist 'redirect_to))
-  (assert-nil (rails-show-args-function-docs-exist 'poop)))
+  (assert-t (show-args-function-docs-exist 'redirect_to))
+  (assert-nil (show-args-function-docs-exist 'poop)))
 
 (deftest "create two spaces"
   (save-excursion
     (end-of-buffer)
-    (rails-show-args-create-two-spaces-at-point)
-    (backward-char 2)
+
+    (show-args-create-two-spaces-at-point)
     (assert-t (looking-at "  "))
     (delete-char 2)))
 
+(deftest "it will create an overlay at point"
+  (save-excursion
+    (end-of-buffer)
 
+    (show-args-create-overlay-at-point)
 
+    (assert-nonnil (overlays-at (point)))
+    (delete-overlay (car (overlays-at (point))))
+    (delete-char 2)))
+
+(deftest "it will show the arguments in an overlay"
+  (save-excursion
+    (end-of-buffer)
+
+    (insert "redirect_to")
+    (show-args-create-functions-overlay-at-point) 
+    (assert-equal redirect_to_doc (overlay-get (car (overlays-at (point))) 'display))
+    (delete-overlay (car (overlays-at (point))))
+    (backward-char 11)
+    (delete-char 13)))
