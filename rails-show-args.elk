@@ -1,8 +1,3 @@
-; redirect_to
-
-(defun after-point ()
-  (+ 1 (point)))
-
 (defun before-and-after (test)
   (save-excursion
     (set-buffer (generate-new-buffer "test-scratch"))
@@ -17,32 +12,31 @@
 (deftest "can get associated documentation for function string"
   (assert-equal redirect_to_doc (show-args-for "redirect_to")))
 
+(deftest "can tell you if the lookup failed"
+  (assert-t (show-args-function-docs-exist 'redirect_to))
+  (assert-nil (show-args-function-docs-exist 'poop)))
+
 (deftest "can get associated documentation for function thing at point"
   (before-and-after
    (lambda()
      (insert "redirect_to")
      (assert-equal redirect_to_doc (show-args-for-at-point)))))
 
-(deftest "can tell you if the lookup failed"
-  (assert-t (show-args-function-docs-exist 'redirect_to))
-  (assert-nil (show-args-function-docs-exist 'poop)))
-
 (deftest "create two spaces"
   (before-and-after
    (lambda()
-    (show-args-create-two-spaces-at-point)
-    (assert-t (looking-at "  ")))))
+    (show-args-create-a-space-at-point)
+    (assert-t (looking-at " ")))))
 
 (deftest "it will create an overlay at point"
   (before-and-after 
    (lambda()
-
     (show-args-create-overlay-at-point)
-    (assert-nonnil (overlays-at (after-point))))))
+    (assert-nonnil (overlays-at (point))))))
 
 (deftest "it will show the arguments in an overlay"
   (before-and-after 
    (lambda()
      (insert "redirect_to")
      (show-args-create-functions-overlay-at-point) 
-     (assert-equal redirect_to_doc (overlay-get (car (overlays-at (after-point))) 'display)))))
+     (assert-equal redirect_to_doc (overlay-get (car (overlays-at (point))) 'display)))))
