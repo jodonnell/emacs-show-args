@@ -40,3 +40,11 @@
      (insert "redirect_to")
      (show-args-create-functions-overlay-at-point) 
      (assert-equal redirect_to_doc (overlay-get (car (overlays-at (point))) 'display)))))
+
+(deftest "when you start typing a one argument function it removes the overlay"
+  (before-and-after 
+   (lambda()
+     (insert "test_one_arg")
+     (show-args-create-functions-overlay-at-point)
+     (insert "s")
+     (assert-nil (car (overlays-at (point)))))))

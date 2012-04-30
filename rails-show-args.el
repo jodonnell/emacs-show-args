@@ -1,5 +1,6 @@
 (setq hash (make-hash-table))
-(puthash 'redirect_to "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}"  hash)
+(puthash 'redirect_to "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}" hash)
+(puthash 'test_one_arg "string" hash)
 
 (defface show-args-face
   '((t (:foreground "darkgray" :underline t)))
@@ -34,4 +35,13 @@
     (overlay-put overlay 'before-string " ")
     (overlay-put overlay 'after-string " ")
     (overlay-put overlay 'font-lock-face 'show-args-face)
-    (overlay-put overlay 'display (show-args-for-at-point))))
+    (overlay-put overlay 'display (show-args-for-at-point))
+    (overlay-put overlay 'insert-in-front-hooks '(show-args-insert-key-hook))))
+
+(defun show-args-insert-key-hook(overlay after begin end &optional length-replaced)
+  (if after
+      (progn
+        (backward-char 1)
+        (insert " ")
+        (forward-char 1)
+        (delete-overlay overlay))))
