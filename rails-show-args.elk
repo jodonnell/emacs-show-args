@@ -4,13 +4,17 @@
     (funcall test)
     (kill-buffer "test-scratch")))
 
-(setq redirect_to_doc "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}")
+(defun get-display-prop-at-position (position)
+  (overlay-get (car (overlays-at position)) 'display))
+
+(setq redirect-to-doc "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}")
+(setq redirect-to-second-arg-doc ", {:status, :flash, :notice, :alert}")
 
 (deftest "can get associated documentation for function symbol"
-  (assert-equal redirect_to_doc (show-args-for-symbol 'redirect_to)))
+  (assert-equal redirect-to-doc (show-args-for-symbol 'redirect_to)))
 
 (deftest "can get associated documentation for function string"
-  (assert-equal redirect_to_doc (show-args-for "redirect_to")))
+  (assert-equal redirect-to-doc (show-args-for "redirect_to")))
 
 (deftest "can tell you if the lookup failed"
   (assert-t (show-args-function-docs-exist 'redirect_to))
@@ -20,7 +24,7 @@
   (before-and-after
    (lambda()
      (insert "redirect_to")
-     (assert-equal redirect_to_doc (show-args-for-at-point)))))
+     (assert-equal redirect-to-doc (show-args-for-at-point)))))
 
 (deftest "create two spaces"
   (before-and-after
@@ -39,7 +43,7 @@
    (lambda()
      (insert "redirect_to")
      (show-args-create-functions-overlay-at-point) 
-     (assert-equal redirect_to_doc (overlay-get (car (overlays-at (point))) 'display)))))
+     (assert-equal redirect-to-doc (get-display-prop-at-position (point))))))
 
 (deftest "when you start typing a one argument function it removes the overlay"
   (before-and-after 
@@ -48,3 +52,12 @@
      (show-args-create-functions-overlay-at-point)
      (insert "s")
      (assert-nil (car (overlays-at (point)))))))
+
+(deftest "when you start typing a multiple argument function it removes the first part of the overlay"
+  (before-and-after 
+   (lambda()
+     (insert "redirect_to")
+     (show-args-create-functions-overlay-at-point)
+     (insert "m")
+     (assert-nil (car (overlays-at (point))))
+     (assert-equal redirect-to-second-arg-doc (get-display-prop-at-position (+ 1 (point)))))))

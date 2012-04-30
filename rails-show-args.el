@@ -41,7 +41,11 @@
 (defun show-args-insert-key-hook(overlay after begin end &optional length-replaced)
   (if after
       (progn
-        (backward-char 1)
-        (insert " ")
-        (forward-char 1)
-        (delete-overlay overlay))))
+        (if (not (string-match "," (overlay-get overlay 'display)))
+            (progn
+              (backward-char 1)
+              (insert " ")
+              (forward-char 1)
+              (delete-overlay overlay))
+          (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay)))
+          (overlay-put overlay 'display (cdr (split-string (overlay-get overlay 'display) ", ")))))))
