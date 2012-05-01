@@ -48,4 +48,7 @@
               (forward-char 1)
               (delete-overlay overlay))
           (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay)))
-          (overlay-put overlay 'display (cdr (split-string (overlay-get overlay 'display) ", ")))))))
+          (overlay-put overlay 'display (show-args-remove-up-to-first-comma))))))
+
+(defun show-args-remove-up-to-first-comma()
+  (concat ", " (mapconcat 'identity (cdr (split-string (overlay-get overlay 'display) ", ")) ", ")))
