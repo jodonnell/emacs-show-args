@@ -4,11 +4,34 @@
 
 (setq show-args-overlay nil)
 
+(defvar show-args-mode nil
+  "Dummy variable to suppress compiler warnings.")
+
+(defvar show-args-mode-hook nil
+  "Hook for `show-args-mode'.")
+
 (defface show-args-face
   '((t (:foreground "darkgray" :underline t)))
   "Face for show args"
   :group 'show-args)
 
+(define-minor-mode show-args-mode
+  "Show Argument mode"
+  :lighter " SA"
+  :group 'show-args
+  (if show-args-mode
+      (progn
+        (add-hook 'post-command-hook 'show-args-show-args-if-function nil t)
+        (add-hook 'pre-command-hook 'show-args-cleanup-if-not-self-insert nil t)
+        (run-hooks 'show-args-mode-hook))
+    (remove-hook 'pre-command-hook 'show-args-cleanup-if-not-self-insert t)
+    (remove-hook 'post-command-hook 'show-args-show-args-if-function t)))
+
+
+(defun show-args-cleanup-if-not-self-insert()
+  (if (not (eq this-command 'self-insert-command))
+      (remove-insert-hook-text-property 'show-args-abort-if-not-space-or-open-paren)
+      (show-args-cleanup)))
 
 (defun show-args-for (function)
   (show-args-for-symbol (intern function)))
@@ -17,11 +40,10 @@
   (gethash function hash))
 
 (defun show-args-for-at-point ()
-  (interactive)
   (show-args-for (thing-at-point 'symbol)))
 
-(defun show-args-function-docs-exist (function)
-  (not (equal nil (gethash function hash))))
+(defun show-args-is-known-function-at-point()
+  (not (eq nil (gethash (intern (thing-at-point 'symbol)) hash))))
 
 (defun show-args-create-a-space-at-point ()
   (insert "  ")
@@ -30,10 +52,18 @@
 (defun show-args-create-overlay-at-point ()
   (show-args-create-a-space-at-point)
   (setq show-args-overlay (make-overlay (+ 1 (point)) (+ 2 (point))))
+  (show-args-create-text-property))
+  
+(defun show-args-create-text-property()
+  (put-text-property (point) (+ 1 (point)) 'rear-nonsticky t)
   (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '(show-args-abort-if-not-space-or-open-paren)))
 
+(defun show-args-show-args-if-function()
+  (if (> (length (thing-at-point 'symbol)) 0)
+      (if (show-args-is-known-function-at-point)
+          (show-args-create-functions-overlay-at-point))))
+
 (defun show-args-create-functions-overlay-at-point ()
-  (interactive)
   (show-args-cleanup)
   (show-args-create-overlay-at-point)
   (overlay-put show-args-overlay 'font-lock-face 'show-args-face)
