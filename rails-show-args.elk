@@ -26,24 +26,41 @@
      (insert "redirect_to")
      (assert-equal redirect-to-doc (show-args-for-at-point)))))
 
-(deftest "create two spaces"
+(deftest "creates one space"
   (before-and-after
    (lambda()
     (show-args-create-a-space-at-point)
     (assert-t (looking-at " ")))))
 
-(deftest "it will create an overlay at point"
+(deftest "it will create an overlay at point after space"
   (before-and-after 
    (lambda()
     (show-args-create-overlay-at-point)
-    (assert-nonnil (overlays-at (point))))))
+    (assert-nonnil (overlays-at (+ 1 (point)))))))
 
 (deftest "it will show the arguments in an overlay"
   (before-and-after 
    (lambda()
      (insert "redirect_to")
      (show-args-create-functions-overlay-at-point) 
-     (assert-equal redirect-to-doc (get-display-prop-at-position (point))))))
+     (assert-equal redirect-to-doc (get-display-prop-at-position (+ 1 (point)))))))
+
+(deftest "it will clean up if you type anything other than a space or open paren"
+  (before-and-after 
+   (lambda()
+     (insert "redirect_to")
+     (show-args-create-functions-overlay-at-point) 
+     (insert "a")
+     (assert-nil (overlays-in (point-min) (point-max)))
+     (assert-nil (memq 'if-space-or-open-paren (get-text-property (point) 'insert-in-front-hooks))))))
+
+(deftest "it will remove the autospace if you type a space or open paren"
+  (before-and-after 
+   (lambda()
+     (insert "redirect_to")
+     (show-args-create-functions-overlay-at-point) 
+     (insert "(")
+     (assert-nonnil (overlays-in (point) (+ 1 (point)))))))
 
 (deftest "when you start typing a one argument function it removes the overlay"
   (before-and-after 
@@ -58,6 +75,27 @@
    (lambda()
      (insert "redirect_to")
      (show-args-create-functions-overlay-at-point)
+     (insert " ")
      (insert "m")
-     (assert-nil (car (overlays-at (point))))
-     (assert-equal redirect-to-second-arg-doc (get-display-prop-at-position (+ 1 (point)))))))
+     (assert-equal redirect-to-second-arg-doc (get-display-prop-at-position (point))))))
+
+(deftest "after first argument comma replaces comma inside overlay"
+  (before-and-after 
+   (lambda()
+     (insert "redirect_to")
+     (show-args-create-functions-overlay-at-point)
+     (insert " ")
+     (insert "m")
+     (insert ",")
+     (assert-equal  " {:status, :flash, :notice, :alert}" (get-display-prop-at-position (point))))))
+
+(deftest "after comma space replaces space inside overlay"
+  (before-and-after 
+   (lambda()
+     (insert "redirect_to")
+     (show-args-create-functions-overlay-at-point)
+     (insert " ")
+     (insert "m")
+     (insert ",")
+     (insert " ")
+     (assert-equal  "{:status, :flash, :notice, :alert}" (get-display-prop-at-position (point))))))

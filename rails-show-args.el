@@ -2,6 +2,8 @@
 (puthash 'redirect_to "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}" hash)
 (puthash 'test_one_arg "string" hash)
 
+(setq show-args-overlay nil)
+
 (defface show-args-face
   '((t (:foreground "darkgray" :underline t)))
   "Face for show args"
@@ -22,33 +24,47 @@
   (not (equal nil (gethash function hash))))
 
 (defun show-args-create-a-space-at-point ()
-  (insert " ")
-  (backward-char 1))
+  (insert "  ")
+  (backward-char 2))
 
 (defun show-args-create-overlay-at-point ()
   (show-args-create-a-space-at-point)
-  (make-overlay (point) (+ 1 (point))))
+  (setq show-args-overlay (make-overlay (+ 1 (point)) (+ 2 (point))))
+  (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '(show-args-abort-if-not-space-or-open-paren)))
 
 (defun show-args-create-functions-overlay-at-point ()
   (interactive)
-  (let ((overlay (show-args-create-overlay-at-point)))
-    (overlay-put overlay 'before-string " ")
-    (overlay-put overlay 'after-string " ")
-    (overlay-put overlay 'font-lock-face 'show-args-face)
-    (overlay-put overlay 'display (show-args-for-at-point))
-    (overlay-put overlay 'insert-in-front-hooks '(show-args-insert-key-hook))))
+  (show-args-create-overlay-at-point)
+  (overlay-put show-args-overlay 'font-lock-face 'show-args-face)
+  (overlay-put show-args-overlay 'display (show-args-for-at-point))
+  (overlay-put show-args-overlay 'insert-in-front-hooks '(show-args-insert-key-hook)))
 
 (defun show-args-insert-key-hook(overlay after begin end &optional length-replaced)
   (if after
       (progn
-        (if (not (string-match "," (overlay-get overlay 'display)))
+        (if (string= "," (buffer-substring-no-properties begin end))
             (progn
-              (backward-char 1)
-              (insert " ")
-              (forward-char 1)
-              (delete-overlay overlay))
+              (overlay-put overlay 'display (show-args-remove-the-first-overlay-char overlay))
+              (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay))))
           (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay)))
           (overlay-put overlay 'display (show-args-remove-up-to-first-comma))))))
 
+(defun show-args-remove-the-first-overlay-char(overlay)
+  (overlay-put overlay 'display (substring (overlay-get overlay 'display) 1)))
+
+
 (defun show-args-remove-up-to-first-comma()
   (concat ", " (mapconcat 'identity (cdr (split-string (overlay-get overlay 'display) ", ")) ", ")))
+
+(defun show-args-abort-if-not-space-or-open-paren(begin end) 
+  (if (not (or 
+       (string= " " (buffer-substring-no-properties begin end))
+       (string= "(" (buffer-substring-no-properties begin end))))
+      (progn
+        (delete-overlay show-args-overlay)
+        (remove-insert-hook-text-property 'show-args-abort-if-not-space-or-open-paren))
+    (delete-char 1)))
+
+(defun remove-insert-hook-text-property(hook-name) 
+  (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '())) ; removes all
+
