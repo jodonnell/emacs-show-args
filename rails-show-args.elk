@@ -45,6 +45,15 @@
      (insert " ")
      (assert-equal "H" (show-args-first-char-in-overlay show-args-overlay)))))
 
+(deftest "it can tell you the length of an empty overlay"
+  (before-and-after 
+   (lambda()
+     (insert "test_one_arg")
+     (show-args-create-functions-overlay-at-point) 
+     (insert " ")
+     (insert "s")
+     (assert-t (show-args-overlay-empty show-args-overlay)))))
+
 (deftest "it will show the arguments in an overlay"
   (before-and-after 
    (lambda()
@@ -74,6 +83,7 @@
    (lambda()
      (insert "test_one_arg")
      (show-args-create-functions-overlay-at-point)
+     (insert " ")
      (insert "s")
      (assert-nil (car (overlays-at (point)))))))
 

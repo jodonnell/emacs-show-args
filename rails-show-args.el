@@ -43,12 +43,23 @@
   (if after
       (progn
         (if (show-args-did-hit-space-or-comma overlay begin end)
-            (progn
-              (overlay-put overlay 'display (show-args-remove-the-first-overlay-char overlay))
-              (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay))))
-          (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay)))
-          (overlay-put overlay 'display (show-args-remove-up-to-first-comma))))))
+            (show-args-delete-first-char-in-overlay overlay)
+          (show-args-move-overlay-foward-one overlay)
+          (overlay-put overlay 'display (show-args-remove-up-to-first-comma))
+          (if (show-args-overlay-empty overlay)
+              (delete-overlay overlay)
+            (overlay-put overlay 'display (concat ", " (overlay-get overlay 'display))))))))
 
+
+(defun show-args-overlay-empty(overlay)
+  (eq 0 (length (overlay-get overlay 'display))))
+
+(defun show-args-delete-first-char-in-overlay(overlay)
+  (overlay-put overlay 'display (show-args-remove-the-first-overlay-char overlay))
+  (show-args-move-overlay-foward-one overlay))
+
+(defun show-args-move-overlay-foward-one(overlay)
+  (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay))))
 
 (defun show-args-did-hit-space-or-comma(overlay begin end)
   (or 
@@ -63,7 +74,7 @@
 
 
 (defun show-args-remove-up-to-first-comma()
-  (concat ", " (mapconcat 'identity (cdr (split-string (overlay-get overlay 'display) ", ")) ", ")))
+  (mapconcat 'identity (cdr (split-string (overlay-get overlay 'display) ", ")) ", "))
 
 (defun show-args-abort-if-not-space-or-open-paren(begin end) 
   (if (not (or 
