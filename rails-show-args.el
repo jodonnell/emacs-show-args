@@ -34,6 +34,7 @@
 
 (defun show-args-create-functions-overlay-at-point ()
   (interactive)
+  (show-args-cleanup)
   (show-args-create-overlay-at-point)
   (overlay-put show-args-overlay 'font-lock-face 'show-args-face)
   (overlay-put show-args-overlay 'display (show-args-for-at-point))
@@ -47,7 +48,7 @@
           (show-args-move-overlay-foward-one overlay)
           (overlay-put overlay 'display (show-args-remove-up-to-first-comma))
           (if (show-args-overlay-empty overlay)
-              (delete-overlay overlay)
+              (show-args-cleanup)
             (overlay-put overlay 'display (concat ", " (overlay-get overlay 'display))))))))
 
 
@@ -81,10 +82,13 @@
        (string= " " (buffer-substring-no-properties begin end))
        (string= "(" (buffer-substring-no-properties begin end))))
       (progn
-        (delete-overlay show-args-overlay)
+        (show-args-cleanup)
         (remove-insert-hook-text-property 'show-args-abort-if-not-space-or-open-paren))
     (delete-char 1)))
 
 (defun remove-insert-hook-text-property(hook-name) 
   (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '())) ; removes all
 
+(defun show-args-cleanup()
+  (if (overlayp show-args-overlay)
+      (delete-overlay show-args-overlay)))
