@@ -30,7 +30,6 @@
 
 (defun show-args-cleanup-if-not-self-insert()
   (if (not (eq this-command 'self-insert-command))
-      (remove-insert-hook-text-property 'show-args-abort-if-not-space-or-open-paren)
       (show-args-cleanup)))
 
 (defun show-args-for (function)
@@ -56,12 +55,14 @@
   
 (defun show-args-create-text-property()
   (put-text-property (point) (+ 1 (point)) 'rear-nonsticky t)
+  (put-text-property (point) (+ 1 (point)) 'show-args-text-property t)
   (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '(show-args-abort-if-not-space-or-open-paren)))
 
 (defun show-args-show-args-if-function()
-  (if (> (length (thing-at-point 'symbol)) 0)
-      (if (show-args-is-known-function-at-point)
-          (show-args-create-functions-overlay-at-point))))
+  (if (eq this-command 'self-insert-command)
+      (if (> (length (thing-at-point 'symbol)) 0)
+          (if (show-args-is-known-function-at-point)
+              (show-args-create-functions-overlay-at-point)))))
 
 (defun show-args-create-functions-overlay-at-point ()
   (show-args-cleanup)
@@ -112,13 +113,16 @@
        (string= " " (buffer-substring-no-properties begin end))
        (string= "(" (buffer-substring-no-properties begin end))))
       (progn
-        (show-args-cleanup)
-        (remove-insert-hook-text-property 'show-args-abort-if-not-space-or-open-paren))
+        (show-args-cleanup))
     (delete-char 1)))
 
-(defun remove-insert-hook-text-property(hook-name) 
-  (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '())) ; removes all
-
 (defun show-args-cleanup()
+  (setq my-text-prop-at (text-property-any (point-min) (point-max) 'show-args-text-property t))
+  (if my-text-prop-at
+      (progn
+        (put-text-property my-text-prop-at (+ 1 my-text-prop-at) 'rear-nonsticky nil)
+        (put-text-property my-text-prop-at (+ 1 my-text-prop-at) 'show-args-text-property nil)
+        (put-text-property my-text-prop-at (+ 1 my-text-prop-at) 'insert-in-front-hooks '())))
+
   (if (overlayp show-args-overlay)
       (delete-overlay show-args-overlay)))
