@@ -1,5 +1,5 @@
 (setq hash (make-hash-table))
-(puthash 'redirect_to "Hash | Record | String | Proc | :back, {:status, :flash, :notice, :alert}" hash)
+(puthash 'redirect_to "Hash | Record | String | Proc | :back, {:status :flash :notice :alert}" hash)
 (puthash 'test_one_arg "string" hash)
 
 (setq show-args-overlay nil)
@@ -42,12 +42,21 @@
 (defun show-args-insert-key-hook(overlay after begin end &optional length-replaced)
   (if after
       (progn
-        (if (string= "," (buffer-substring-no-properties begin end))
+        (if (show-args-did-hit-space-or-comma overlay begin end)
             (progn
               (overlay-put overlay 'display (show-args-remove-the-first-overlay-char overlay))
               (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay))))
           (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay)))
           (overlay-put overlay 'display (show-args-remove-up-to-first-comma))))))
+
+
+(defun show-args-did-hit-space-or-comma(overlay begin end)
+  (or 
+   (and (string= "," (buffer-substring-no-properties begin end)) (string= "," (show-args-first-char-in-overlay overlay)))
+   (and (string= " " (buffer-substring-no-properties begin end)) (string= " " (show-args-first-char-in-overlay overlay)))))
+
+(defun show-args-first-char-in-overlay(overlay)
+  (substring (overlay-get overlay 'display) 0 1))
 
 (defun show-args-remove-the-first-overlay-char(overlay)
   (overlay-put overlay 'display (substring (overlay-get overlay 'display) 1)))
