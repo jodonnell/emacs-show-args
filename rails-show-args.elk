@@ -3,6 +3,7 @@
     (set-buffer (generate-new-buffer "test-scratch"))
     (show-args-mode t)
     (funcall test)
+    (sa-cleanup)
     (kill-buffer "test-scratch")))
 
 (defun get-display-prop-at-position (position)
