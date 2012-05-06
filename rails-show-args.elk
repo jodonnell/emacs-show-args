@@ -75,7 +75,7 @@
      (show-args-create-functions-overlay-at-point) 
      (insert "a")
      (assert-nil (overlays-in (point-min) (point-max)))
-     (assert-nil (memq 'if-space-or-open-paren (get-text-property (point) 'insert-in-front-hooks))))))
+     (assert-nil (text-property-any (point-min) (point-max) 'show-args-text-property t)))))
 
 (deftest "it will remove the autospace if you type a space or open paren"
   (before-and-after 
@@ -123,3 +123,15 @@
      (insert ",")
      (insert " ")
      (assert-equal  "{:status :flash :notice :alert}" (get-display-prop-at-position (point))))))
+
+(deftest "there are no residual spaces left"
+  (before-and-after 
+   (lambda()
+     (insert "test_one_arg")
+     (show-args-create-functions-overlay-at-point)
+     (insert " ")
+     (insert "s")
+     (assert-nil (string= " " (buffer-substring-no-properties (- (point-max) 1) (point-max)))))))
+
+
+
