@@ -11,68 +11,64 @@
 (setq redirect-to-doc "Hash | Record | String | Proc | :back, {:status :flash :notice :alert}")
 
 (deftest "can get associated documentation for function symbol"
-  (assert-equal redirect-to-doc (show-args-for-symbol 'redirect_to)))
+  (assert-equal redirect-to-doc (sa-for-symbol 'redirect_to)))
 
 (deftest "it can tell you if thing at point is a know function"
   (before-and-after
    (lambda()
      (insert "redirect_to")
-     (assert-t (show-args-is-known-function-at-point)))))
+     (assert-t (sa-is-known-function-at-point)))))
 
 (deftest "can get associated documentation for function string"
-  (assert-equal redirect-to-doc (show-args-for "redirect_to")))
-
-(deftest "can tell you if the lookup failed"
-  (assert-t (show-args-function-docs-exist 'redirect_to))
-  (assert-nil (show-args-function-docs-exist 'poop)))
+  (assert-equal redirect-to-doc (sa-for "redirect_to")))
 
 (deftest "can get associated documentation for function thing at point"
   (before-and-after
    (lambda()
      (insert "redirect_to")
-     (assert-equal redirect-to-doc (show-args-for-at-point)))))
+     (assert-equal redirect-to-doc (sa-for-at-point)))))
 
 (deftest "creates one space"
   (before-and-after
    (lambda()
-    (show-args-create-a-space-at-point)
+    (sa-create-a-space-at-point)
     (assert-t (looking-at " ")))))
 
 (deftest "it will create an overlay at point after space"
   (before-and-after 
    (lambda()
-    (show-args-create-overlay-at-point)
+    (sa-create-overlay-at-point)
     (assert-nonnil (overlays-at (+ 1 (point)))))))
 
 (deftest "it can show you the first char in an overlay"
   (before-and-after
    (lambda()
      (insert "redirect_to")
-     (show-args-create-functions-overlay-at-point) 
+     (sa-create-functions-overlay-at-point) 
      (insert " ")
-     (assert-equal "H" (show-args-first-char-in-overlay show-args-overlay)))))
+     (assert-equal "H" (sa-first-char-in-overlay sa-overlay)))))
 
 (deftest "it can tell you the length of an empty overlay"
   (before-and-after 
    (lambda()
      (insert "test_one_arg")
-     (show-args-create-functions-overlay-at-point) 
+     (sa-create-functions-overlay-at-point) 
      (insert " ")
      (insert "s")
-     (assert-t (show-args-overlay-empty show-args-overlay)))))
+     (assert-t (sa-overlay-empty sa-overlay)))))
 
 (deftest "it will show the arguments in an overlay"
   (before-and-after 
    (lambda()
      (insert "redirect_to")
-     (show-args-create-functions-overlay-at-point) 
+     (sa-create-functions-overlay-at-point) 
      (assert-equal redirect-to-doc (get-display-prop-at-position (+ 1 (point)))))))
 
 (deftest "it will clean up if you type anything other than a space or open paren"
   (before-and-after 
    (lambda()
      (insert "redirect_to")
-     (show-args-create-functions-overlay-at-point) 
+     (sa-create-functions-overlay-at-point) 
      (insert "a")
      (assert-nil (overlays-in (point-min) (point-max)))
      (assert-nil (text-property-any (point-min) (point-max) 'show-args-text-property t)))))
@@ -81,7 +77,7 @@
   (before-and-after 
    (lambda()
      (insert "redirect_to")
-     (show-args-create-functions-overlay-at-point) 
+     (sa-create-functions-overlay-at-point) 
      (insert "(")
      (assert-nonnil (overlays-in (point) (+ 1 (point)))))))
 
@@ -89,7 +85,7 @@
   (before-and-after 
    (lambda()
      (insert "test_one_arg")
-     (show-args-create-functions-overlay-at-point)
+     (sa-create-functions-overlay-at-point)
      (insert " ")
      (insert "s")
      (assert-nil (car (overlays-at (point)))))))
@@ -98,7 +94,7 @@
   (before-and-after 
    (lambda()
      (insert "redirect_to")
-     (show-args-create-functions-overlay-at-point)
+     (sa-create-functions-overlay-at-point)
      (insert " ")
      (insert "m")
      (assert-equal ", {:status :flash :notice :alert}" (get-display-prop-at-position (point))))))
@@ -107,7 +103,7 @@
   (before-and-after 
    (lambda()
      (insert "redirect_to")
-     (show-args-create-functions-overlay-at-point)
+     (sa-create-functions-overlay-at-point)
      (insert " ")
      (insert "m")
      (insert ",")
@@ -117,7 +113,7 @@
   (before-and-after 
    (lambda()
      (insert "redirect_to")
-     (show-args-create-functions-overlay-at-point)
+     (sa-create-functions-overlay-at-point)
      (insert " ")
      (insert "m")
      (insert ",")
@@ -128,7 +124,7 @@
   (before-and-after 
    (lambda()
      (insert "test_one_arg")
-     (show-args-create-functions-overlay-at-point)
+     (sa-create-functions-overlay-at-point)
      (insert " ")
      (insert "s")
      (assert-nil (string= " " (buffer-substring-no-properties (- (point-max) 1) (point-max)))))))

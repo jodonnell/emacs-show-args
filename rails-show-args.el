@@ -2,7 +2,7 @@
 (puthash 'redirect_to "Hash | Record | String | Proc | :back, {:status :flash :notice :alert}" hash)
 (puthash 'test_one_arg "string" hash)
 
-(setq show-args-overlay nil)
+(setq sa-overlay nil)
 
 (defvar show-args-mode nil
   "Dummy variable to suppress compiler warnings.")
@@ -10,7 +10,7 @@
 (defvar show-args-mode-hook nil
   "Hook for `show-args-mode'.")
 
-(defface show-args-face
+(defface sa-face
   '((t (:foreground "darkgray" :underline t)))
   "Face for show args"
   :group 'show-args)
@@ -21,102 +21,100 @@
   :group 'show-args
   (if show-args-mode
       (progn
-        (add-hook 'post-command-hook 'show-args-show-args-if-function nil t)
-        (add-hook 'pre-command-hook 'show-args-cleanup-if-not-self-insert nil t)
+        (add-hook 'post-command-hook 'sa-show-args-if-function nil t)
+        (add-hook 'pre-command-hook 'sa-cleanup-if-not-self-insert nil t)
         (run-hooks 'show-args-mode-hook))
-    (remove-hook 'pre-command-hook 'show-args-cleanup-if-not-self-insert t)
-    (remove-hook 'post-command-hook 'show-args-show-args-if-function t)))
+    (remove-hook 'pre-command-hook 'sa-cleanup-if-not-self-insert t)
+    (remove-hook 'post-command-hook 'sa-show-args-if-function t)))
 
 
-(defun show-args-cleanup-if-not-self-insert()
+(defun sa-cleanup-if-not-self-insert()
   (if (not (eq this-command 'self-insert-command))
-      (show-args-cleanup)))
+      (sa-cleanup)))
 
-(defun show-args-for (function)
-  (show-args-for-symbol (intern function)))
+(defun sa-for (function)
+  (sa-for-symbol (intern function)))
 
-(defun show-args-for-symbol (function)
+(defun sa-for-symbol (function)
   (gethash function hash))
 
-(defun show-args-for-at-point ()
-  (show-args-for (thing-at-point 'symbol)))
+(defun sa-for-at-point ()
+  (sa-for (thing-at-point 'symbol)))
 
-(defun show-args-is-known-function-at-point()
+(defun sa-is-known-function-at-point()
   (not (eq nil (gethash (intern (thing-at-point 'symbol)) hash))))
 
-(defun show-args-create-a-space-at-point ()
+(defun sa-create-a-space-at-point ()
   (insert "  ")
   (backward-char 2))
 
-(defun show-args-create-overlay-at-point ()
-  (show-args-create-a-space-at-point)
-  (setq show-args-overlay (make-overlay (+ 1 (point)) (+ 2 (point))))
-  (show-args-create-text-property))
+(defun sa-create-overlay-at-point ()
+  (sa-create-a-space-at-point)
+  (setq sa-overlay (make-overlay (+ 1 (point)) (+ 2 (point))))
+  (sa-create-text-property))
   
-(defun show-args-create-text-property()
+(defun sa-create-text-property()
   (put-text-property (point) (+ 1 (point)) 'rear-nonsticky t)
-  (put-text-property (point) (+ 1 (point)) 'show-args-text-property t)
-  (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '(show-args-abort-if-not-space-or-open-paren)))
+  (put-text-property (point) (+ 1 (point)) 'sa-text-property t)
+  (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '(sa-abort-if-not-space-or-open-paren)))
 
-(defun show-args-show-args-if-function()
+(defun sa-show-args-if-function()
   (if (eq this-command 'self-insert-command)
       (if (> (length (thing-at-point 'symbol)) 0)
-          (if (show-args-is-known-function-at-point)
-              (show-args-create-functions-overlay-at-point)))))
+          (if (sa-is-known-function-at-point)
+              (sa-create-functions-overlay-at-point)))))
 
-(defun show-args-create-functions-overlay-at-point ()
-  (show-args-cleanup)
-  (show-args-create-overlay-at-point)
-  (overlay-put show-args-overlay 'font-lock-face 'show-args-face)
-  (overlay-put show-args-overlay 'display (show-args-for-at-point))
-  (overlay-put show-args-overlay 'insert-in-front-hooks '(show-args-insert-key-hook)))
+(defun sa-create-functions-overlay-at-point ()
+  (sa-cleanup)
+  (sa-create-overlay-at-point)
+  (overlay-put sa-overlay 'font-lock-face 'sa-face)
+  (overlay-put sa-overlay 'display (sa-for-at-point))
+  (overlay-put sa-overlay 'insert-in-front-hooks '(sa-insert-key-hook)))
 
-(defun show-args-insert-key-hook(overlay after begin end &optional length-replaced)
+(defun sa-insert-key-hook(overlay after begin end &optional length-replaced)
   (if after
       (progn
-        (if (show-args-did-hit-space-or-comma overlay begin end)
-            (show-args-delete-first-char-in-overlay overlay)
-          (show-args-move-overlay-foward-one overlay)
-          (overlay-put overlay 'display (show-args-remove-up-to-first-comma))
-          (if (show-args-overlay-empty overlay)
-              (show-args-cleanup)
+        (if (sa-did-hit-space-or-comma overlay begin end)
+            (sa-delete-first-char-in-overlay overlay)
+          (sa-move-overlay-foward-one overlay)
+          (overlay-put overlay 'display (sa-remove-up-to-first-comma))
+          (if (sa-overlay-empty overlay)
+              (sa-cleanup)
             (overlay-put overlay 'display (concat ", " (overlay-get overlay 'display))))))))
 
 
-(defun show-args-overlay-empty(overlay)
+(defun sa-overlay-empty(overlay)
   (eq 0 (length (overlay-get overlay 'display))))
 
-(defun show-args-delete-first-char-in-overlay(overlay)
-  (overlay-put overlay 'display (show-args-remove-the-first-overlay-char overlay))
-  (show-args-move-overlay-foward-one overlay))
+(defun sa-delete-first-char-in-overlay(overlay)
+  (overlay-put overlay 'display (sa-remove-the-first-overlay-char overlay))
+  (sa-move-overlay-foward-one overlay))
 
-(defun show-args-move-overlay-foward-one(overlay)
+(defun sa-move-overlay-foward-one(overlay)
   (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay))))
 
-(defun show-args-did-hit-space-or-comma(overlay begin end)
+(defun sa-did-hit-space-or-comma(overlay begin end)
   (or 
-   (and (string= "," (buffer-substring-no-properties begin end)) (string= "," (show-args-first-char-in-overlay overlay)))
-   (and (string= " " (buffer-substring-no-properties begin end)) (string= " " (show-args-first-char-in-overlay overlay)))))
+   (and (string= "," (buffer-substring-no-properties begin end)) (string= "," (sa-first-char-in-overlay overlay)))
+   (and (string= " " (buffer-substring-no-properties begin end)) (string= " " (sa-first-char-in-overlay overlay)))))
 
-(defun show-args-first-char-in-overlay(overlay)
+(defun sa-first-char-in-overlay(overlay)
   (substring (overlay-get overlay 'display) 0 1))
 
-(defun show-args-remove-the-first-overlay-char(overlay)
+(defun sa-remove-the-first-overlay-char(overlay)
   (overlay-put overlay 'display (substring (overlay-get overlay 'display) 1)))
 
-
-(defun show-args-remove-up-to-first-comma()
+(defun sa-remove-up-to-first-comma()
   (mapconcat 'identity (cdr (split-string (overlay-get overlay 'display) ", ")) ", "))
 
-(defun show-args-abort-if-not-space-or-open-paren(begin end) 
+(defun sa-abort-if-not-space-or-open-paren(begin end) 
   (if (not (or 
-       (string= " " (buffer-substring-no-properties begin end))
-       (string= "(" (buffer-substring-no-properties begin end))))
-      (progn
-        (show-args-cleanup))
+            (string= " " (buffer-substring-no-properties begin end))
+            (string= "(" (buffer-substring-no-properties begin end))))
+      (sa-cleanup)
     (delete-char 1)))
 
-(defun show-args-cleanup()
+(defun sa-cleanup()
   (setq my-text-prop-at (text-property-any (point-min) (point-max) 'show-args-text-property t))
   (if my-text-prop-at
       (progn
@@ -124,5 +122,5 @@
         (put-text-property my-text-prop-at (+ 1 my-text-prop-at) 'show-args-text-property nil)
         (put-text-property my-text-prop-at (+ 1 my-text-prop-at) 'insert-in-front-hooks '())))
 
-  (if (overlayp show-args-overlay)
-      (delete-overlay show-args-overlay)))
+  (if (overlayp sa-overlay)
+      (delete-overlay sa-overlay)))
