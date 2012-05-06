@@ -44,14 +44,15 @@
 (defun sa-is-known-function-at-point()
   (not (eq nil (gethash (intern (thing-at-point 'symbol)) hash))))
 
-(defun sa-create-a-space-at-point ()
+(defun sa-create-two-spaces-at-point ()
   (insert "  ")
   (backward-char 2))
 
 (defun sa-create-overlay-at-point ()
-  (sa-create-a-space-at-point)
   (setq sa-overlay (make-overlay (+ 1 (point)) (+ 2 (point))))
-  (sa-create-text-property))
+  (overlay-put sa-overlay 'font-lock-face 'sa-face)
+  (overlay-put sa-overlay 'display (sa-for-at-point))
+  (overlay-put sa-overlay 'insert-in-front-hooks '(sa-overlay-insert-key-hook)))
   
 (defun sa-create-text-property()
   (put-text-property (point) (+ 1 (point)) 'rear-nonsticky t)
@@ -66,32 +67,35 @@
 
 (defun sa-create-functions-overlay-at-point ()
   (sa-cleanup)
-  (sa-create-overlay-at-point)
-  (overlay-put sa-overlay 'font-lock-face 'sa-face)
-  (overlay-put sa-overlay 'display (sa-for-at-point))
-  (overlay-put sa-overlay 'insert-in-front-hooks '(sa-insert-key-hook)))
+  (sa-create-two-spaces-at-point)
+  (sa-create-text-property)
+  (sa-create-overlay-at-point))
 
-(defun sa-insert-key-hook(overlay after begin end &optional length-replaced)
+(defun sa-overlay-insert-key-hook(overlay after begin end &optional length-replaced)
   (if after
-      (progn
-        (if (sa-did-hit-space-or-comma overlay begin end)
-            (sa-delete-first-char-in-overlay overlay)
-          (sa-move-overlay-foward-one overlay)
-          (overlay-put overlay 'display (sa-remove-up-to-first-comma))
-          (if (sa-overlay-empty overlay)
-              (sa-cleanup)
-            (overlay-put overlay 'display (concat ", " (overlay-get overlay 'display))))))))
+      (sa-overlay-key-hit overlay begin end)))
 
+(defun sa-overlay-key-hit(overlay begin end)
+  (if (sa-did-hit-space-or-comma overlay begin end)
+      (sa-delete-first-char-in-overlay overlay)
+    (sa-remove-part-of-overlay overlay begin end)))
+
+(defun sa-remove-part-of-overlay(overlay begin end)
+  (sa-move-overlay-foward-one overlay)
+  (overlay-put overlay 'display (sa-remove-up-to-first-comma))
+  (if (sa-overlay-empty overlay)
+      (sa-cleanup)
+    (overlay-put overlay 'display (concat ", " (overlay-get overlay 'display)))))
 
 (defun sa-overlay-empty(overlay)
   (eq 0 (length (overlay-get overlay 'display))))
 
 (defun sa-delete-first-char-in-overlay(overlay)
-  (overlay-put overlay 'display (sa-remove-the-first-overlay-char overlay))
+  (sa-remove-the-first-overlay-char overlay)
   (sa-move-overlay-foward-one overlay))
 
 (defun sa-move-overlay-foward-one(overlay)
-  (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 1 (overlay-end overlay))))
+  (move-overlay overlay (+ 1 (overlay-start overlay)) (+ 2 (overlay-start overlay))))
 
 (defun sa-did-hit-space-or-comma(overlay begin end)
   (or 
@@ -115,12 +119,14 @@
     (delete-char 1)))
 
 (defun sa-cleanup()
-  (setq my-text-prop-at (text-property-any (point-min) (point-max) 'show-args-text-property t))
-  (if my-text-prop-at
-      (progn
-        (put-text-property my-text-prop-at (+ 1 my-text-prop-at) 'rear-nonsticky nil)
-        (put-text-property my-text-prop-at (+ 1 my-text-prop-at) 'show-args-text-property nil)
-        (put-text-property my-text-prop-at (+ 1 my-text-prop-at) 'insert-in-front-hooks '())))
+  (let ((my-text-prop-at (text-property-any (point-min) (point-max) 'show-args-text-property t)))
+    (if my-text-prop-at
+        (sa-cleanup-text-property my-text-prop-at)))
 
   (if (overlayp sa-overlay)
       (delete-overlay sa-overlay)))
+
+(defun sa-cleanup-text-property(text-prop-at)
+  (put-text-property text-prop-at (+ 1 text-prop-at) 'rear-nonsticky nil)
+  (put-text-property text-prop-at (+ 1 text-prop-at) 'show-args-text-property nil)
+  (put-text-property text-prop-at (+ 1 text-prop-at) 'insert-in-front-hooks '()))

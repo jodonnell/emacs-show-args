@@ -31,14 +31,16 @@
 (deftest "creates one space"
   (before-and-after
    (lambda()
-    (sa-create-a-space-at-point)
-    (assert-t (looking-at " ")))))
+     (sa-create-two-spaces-at-point)
+     (assert-t (looking-at "  ")))))
 
 (deftest "it will create an overlay at point after space"
   (before-and-after 
    (lambda()
-    (sa-create-overlay-at-point)
-    (assert-nonnil (overlays-at (+ 1 (point)))))))
+     (insert "  ")
+     (backward-char 2)
+     (sa-create-overlay-at-point)
+     (assert-nonnil (overlays-at (+ 1 (point)))))))
 
 (deftest "it can show you the first char in an overlay"
   (before-and-after
@@ -128,6 +130,3 @@
      (insert " ")
      (insert "s")
      (assert-nil (string= " " (buffer-substring-no-properties (- (point-max) 1) (point-max)))))))
-
-
-
