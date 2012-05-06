@@ -1,8 +1,8 @@
-(setq hash (make-hash-table))
+(defvar hash (make-hash-table))
 (puthash 'redirect_to "Hash | Record | String | Proc | :back, {:status :flash :notice :alert}" hash)
 (puthash 'test_one_arg "string" hash)
 
-(setq sa-overlay nil)
+(defvar sa-overlay nil)
 
 (defvar show-args-mode nil
   "Dummy variable to suppress compiler warnings.")
@@ -20,13 +20,17 @@
   :lighter " SA"
   :group 'show-args
   (if show-args-mode
-      (progn
-        (add-hook 'post-command-hook 'sa-show-args-if-function nil t)
-        (add-hook 'pre-command-hook 'sa-cleanup-if-not-self-insert nil t)
-        (run-hooks 'show-args-mode-hook))
-    (remove-hook 'pre-command-hook 'sa-cleanup-if-not-self-insert t)
-    (remove-hook 'post-command-hook 'sa-show-args-if-function t)))
+      (sa-turn-on-mode)
+    (sa-turn-off-mode)))
 
+(defun sa-turn-off-mode()
+  (remove-hook 'pre-command-hook 'sa-cleanup-if-not-self-insert t)
+  (remove-hook 'post-command-hook 'sa-show-args-if-function t))
+
+(defun sa-turn-on-mode()
+  (add-hook 'post-command-hook 'sa-show-args-if-function nil t)
+  (add-hook 'pre-command-hook 'sa-cleanup-if-not-self-insert nil t)
+  (run-hooks 'show-args-mode-hook))
 
 (defun sa-cleanup-if-not-self-insert()
   (if (not (eq this-command 'self-insert-command))
