@@ -50,15 +50,6 @@
      (insert " ")
      (assert-equal "H" (sa-first-char-in-overlay sa-overlay)))))
 
-(deftest "it can tell you the length of an empty overlay"
-  (before-and-after 
-   (lambda()
-     (insert "test_one_arg")
-     (sa-create-functions-overlay-at-point) 
-     (insert " ")
-     (insert "s")
-     (assert-t (sa-overlay-empty sa-overlay)))))
-
 (deftest "it will show the arguments in an overlay"
   (before-and-after 
    (lambda()
