@@ -33,9 +33,23 @@
   (run-hooks 'show-args-mode-hook))
 
 (defun sa-cleanup-if-not-self-insert()
-  (if (not (eq this-command 'self-insert-command))
+  "This is run when an overlay is shown and you do a command that is not inserting chars"
+  (if (and (overlayp sa-overlay)
+           (not (sa-is-self-insert-command)))
       (sa-cleanup)))
 
+(defun sa-show-args-if-function()
+  (if (and (sa-is-self-insert-command)
+           (sa-is-word-at-point)
+           (sa-is-known-function-at-point))
+      (sa-create-functions-overlay-at-point)))
+
+(defun sa-is-self-insert-command()
+  (eq this-command 'self-insert-command))
+
+(defun sa-is-word-at-point()
+  (> (length (thing-at-point 'symbol)) 0))
+  
 (defun sa-for (function)
   (sa-for-symbol (intern function)))
 
@@ -63,12 +77,6 @@
   (put-text-property (point) (+ 1 (point)) 'sa-text-property t)
   (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '(sa-abort-if-not-space-or-open-paren)))
 
-(defun sa-show-args-if-function()
-  (if (and (eq this-command 'self-insert-command)
-           (> (length (thing-at-point 'symbol)) 0)
-           (sa-is-known-function-at-point))
-      (sa-create-functions-overlay-at-point)))
-
 (defun sa-create-functions-overlay-at-point ()
   (sa-cleanup)
   (sa-create-two-spaces-at-point)
@@ -86,10 +94,13 @@
 
 (defun sa-remove-part-of-overlay(overlay begin end)
   (sa-move-overlay-foward-one overlay)
-  (overlay-put overlay 'display (sa-remove-up-to-first-comma))
+  (sa-remove-up-to-first-comma overlay)
   (if (sa-overlay-empty overlay)
       (sa-cleanup)
-    (overlay-put overlay 'display (concat ", " (overlay-get overlay 'display)))))
+    (sa-prepend-comma overlay)))
+
+(defun sa-prepend-comma(overlay) 
+  (overlay-put overlay 'display (concat ", " (overlay-get overlay 'display))))
 
 (defun sa-overlay-empty(overlay)
   (eq 0 (length (overlay-get overlay 'display))))
@@ -112,8 +123,8 @@
 (defun sa-remove-the-first-overlay-char(overlay)
   (overlay-put overlay 'display (substring (overlay-get overlay 'display) 1)))
 
-(defun sa-remove-up-to-first-comma()
-  (mapconcat 'identity (cdr (split-string (overlay-get overlay 'display) ", ")) ", "))
+(defun sa-remove-up-to-first-comma(overlay)
+  (overlay-put overlay 'display (mapconcat 'identity (cdr (split-string (overlay-get overlay 'display) ", ")) ", ")))
 
 (defun sa-abort-if-not-space-or-open-paren(begin end) 
   (if (not (or 
