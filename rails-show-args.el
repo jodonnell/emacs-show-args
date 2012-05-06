@@ -60,10 +60,10 @@
   (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '(sa-abort-if-not-space-or-open-paren)))
 
 (defun sa-show-args-if-function()
-  (if (eq this-command 'self-insert-command)
-      (if (> (length (thing-at-point 'symbol)) 0)
-          (if (sa-is-known-function-at-point)
-              (sa-create-functions-overlay-at-point)))))
+  (if (and (eq this-command 'self-insert-command)
+           (> (length (thing-at-point 'symbol)) 0)
+           (sa-is-known-function-at-point))
+      (sa-create-functions-overlay-at-point)))
 
 (defun sa-create-functions-overlay-at-point ()
   (sa-cleanup)
