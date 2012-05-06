@@ -124,7 +124,10 @@
         (sa-cleanup-text-property my-text-prop-at)))
 
   (if (overlayp sa-overlay)
-      (delete-overlay sa-overlay)))
+      (progn
+        (delete-overlay sa-overlay)
+        (setq sa-overlay nil)
+        (delete-char 1))))
 
 (defun sa-cleanup-text-property(text-prop-at)
   (put-text-property text-prop-at (+ 1 text-prop-at) 'rear-nonsticky nil)
