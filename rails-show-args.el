@@ -148,3 +148,5 @@
   (put-text-property text-prop-at (+ 1 text-prop-at) 'rear-nonsticky nil)
   (put-text-property text-prop-at (+ 1 text-prop-at) 'show-args-text-property nil)
   (put-text-property text-prop-at (+ 1 text-prop-at) 'insert-in-front-hooks '()))
+
+(provide 'show-args)
