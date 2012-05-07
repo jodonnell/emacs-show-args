@@ -12,6 +12,8 @@
 (defvar show-args-mode-hook nil
   "Hook for `show-args-mode'.")
 
+(defvar sa-point-at-know-function nil)
+
 (defface sa-face
   '((t (:foreground "darkgray" :underline t)))
   "Face for show args"
@@ -27,9 +29,11 @@
 
 (defun sa-turn-off-mode()
   (remove-hook 'pre-command-hook 'sa-cleanup-if-not-self-insert t)
+  (remove-hook 'after-change-functions 'sa-abort-if-not-space-or-open-paren t)
   (remove-hook 'post-command-hook 'sa-show-args-if-function t))
 
 (defun sa-turn-on-mode()
+  (add-hook 'after-change-functions 'sa-abort-if-not-space-or-open-paren nil t)
   (add-hook 'post-command-hook 'sa-show-args-if-function nil t)
   (add-hook 'pre-command-hook 'sa-cleanup-if-not-self-insert nil t)
   (run-hooks 'show-args-mode-hook))
@@ -69,15 +73,10 @@
   (overlay-put sa-overlay 'display (sa-for-at-point))
   (overlay-put sa-overlay 'insert-in-front-hooks '(sa-overlay-insert-key-hook)))
   
-(defun sa-create-text-property()
-  (put-text-property (point) (+ 1 (point)) 'rear-nonsticky t)
-  (put-text-property (point) (+ 1 (point)) 'sa-text-property t)
-  (put-text-property (point) (+ 1 (point)) 'insert-in-front-hooks '(sa-abort-if-not-space-or-open-paren)))
-
 (defun sa-create-functions-overlay-at-point ()
   (sa-cleanup)
   (sa-create-two-spaces-at-point)
-  (sa-create-text-property)
+  (setq sa-point-at-know-function t)
   (sa-create-overlay-at-point))
 
 (defun sa-overlay-insert-key-hook(overlay after begin end &optional length-replaced)
@@ -90,6 +89,7 @@
       (sa-delete-first-char-in-overlay overlay)
     (sa-remove-part-of-overlay overlay begin end)))
 
+  
 (defun sa-remove-part-of-overlay(overlay begin end)
   (sa-move-overlay-foward-one overlay)
   (sa-remove-up-to-first-comma overlay)
@@ -124,18 +124,16 @@
 (defun sa-remove-up-to-first-comma(overlay)
   (overlay-put overlay 'display (mapconcat 'identity (cdr (split-string (overlay-get overlay 'display) ", ")) ", ")))
 
-(defun sa-abort-if-not-space-or-open-paren(begin end) 
-  (if (not (or 
-            (string= " " (buffer-substring-no-properties begin end))
-            (string= "(" (buffer-substring-no-properties begin end))))
-      (sa-cleanup)
-    (delete-char 1)))
+(defun sa-abort-if-not-space-or-open-paren(begin end length) 
+  (if sa-point-at-know-function
+      (if (not (or 
+                (string= " " (buffer-substring-no-properties begin end))
+                (string= "(" (buffer-substring-no-properties begin end))))
+          (sa-cleanup)
+        (delete-char 1)
+        (setq sa-point-at-know-function nil))))
 
 (defun sa-cleanup()
-  (let ((my-text-prop-at (text-property-any (point-min) (point-max) 'show-args-text-property t)))
-    (if my-text-prop-at
-        (sa-cleanup-text-property my-text-prop-at)))
-
   (if (overlayp sa-overlay)
       (sa-cleanup-overlay)))
 
@@ -143,10 +141,5 @@
   (delete-overlay sa-overlay)
   (setq sa-overlay nil)
   (delete-char 1))
-
-(defun sa-cleanup-text-property(text-prop-at)
-  (put-text-property text-prop-at (+ 1 text-prop-at) 'rear-nonsticky nil)
-  (put-text-property text-prop-at (+ 1 text-prop-at) 'show-args-text-property nil)
-  (put-text-property text-prop-at (+ 1 text-prop-at) 'insert-in-front-hooks '()))
 
 (provide 'show-args)

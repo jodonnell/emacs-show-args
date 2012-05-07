@@ -1,6 +1,7 @@
 (defun before-and-after (test)
   (save-excursion
     (setq sa-overlay nil)
+    (setq sa-point-at-know-function nil)
     (set-buffer (generate-new-buffer "test-scratch"))
     (show-args-mode t)
     (funcall test)
