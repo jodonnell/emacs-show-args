@@ -1,5 +1,7 @@
 (defvar hash (make-hash-table))
 (puthash 'redirect_to "Hash | Record | String | Proc | :back, {:status :flash :notice :alert}" hash)
+(puthash 'form_for "record, {:url :namespace :html :method :format :as :remote}, &proc" hash)
+(puthash 'render "{:action :layout :partial :template :file :text :xml :json :inline :js :nothing :update}, {:locals :status :object :collection :as :spacer_template}, &proc" hash)
 (puthash 'test_one_arg "string" hash)
 
 (defvar sa-overlay nil)
