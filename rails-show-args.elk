@@ -1,5 +1,6 @@
 (defun before-and-after (test)
   (save-excursion
+    (setq sa-overlay nil)
     (set-buffer (generate-new-buffer "test-scratch"))
     (show-args-mode t)
     (funcall test)
@@ -11,17 +12,11 @@
 
 (setq redirect-to-doc "Hash | Record | String | Proc | :back, {:status :flash :notice :alert}")
 
-(deftest "can get associated documentation for function symbol"
-  (assert-equal redirect-to-doc (sa-for-symbol 'redirect_to)))
-
 (deftest "it can tell you if thing at point is a know function"
   (before-and-after
    (lambda()
      (insert "redirect_to")
      (assert-t (sa-is-known-function-at-point)))))
-
-(deftest "can get associated documentation for function string"
-  (assert-equal redirect-to-doc (sa-for "redirect_to")))
 
 (deftest "can get associated documentation for function thing at point"
   (before-and-after
@@ -122,3 +117,14 @@
      (insert " ")
      (insert "s")
      (assert-nil (string= " " (buffer-substring-no-properties (- (point-max) 1) (point-max)))))))
+
+(deftest "will work with ruby-mode"
+  (before-and-after 
+   (lambda()
+     (insert "test_one_arg")
+     (ruby-mode)
+     (sa-create-functions-overlay-at-point)
+     (insert " ")
+     (insert "m")
+     (assert-nil sa-overlay))))
+
