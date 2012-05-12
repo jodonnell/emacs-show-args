@@ -42,7 +42,9 @@
 (defun sa-cleanup-if-not-self-insert()
   "This is run when an overlay is shown and you do a command that is not inserting chars"
   (if (and (overlayp sa-overlay)
-           (not (sa-is-self-insert-command)))
+           (and
+            (not (sa-is-self-insert-command))
+            (not (sa-prehook-dont-clean))))
       (sa-cleanup)))
 
 (defun sa-show-args-if-function()
@@ -80,6 +82,13 @@
   (sa-create-two-spaces-at-point)
   (setq sa-point-at-know-function t)
   (sa-create-overlay-at-point))
+
+(defun sa-prehook-dont-clean() 
+  (or (eq this-command 'backward-delete-char-untabify)
+      (eq this-command 'delete-backward-char)
+      (eq this-command 'backward-kill-word)))
+  ; they have hit backspace
+  ; they are awaiting first keystroke function that can be space or open paren
 
 (defun sa-overlay-insert-key-hook(overlay after begin end &optional length-replaced)
   "This hook is called when you type in front of the args overlay"
