@@ -47,7 +47,7 @@
 (defun sa-show-args-if-function()
   (if (and (sa-is-self-insert-command)
            (sa-is-word-at-point)
-           (sa-is-known-function-at-point))
+           (sa-is-known-function-behind-point))
       (sa-create-functions-overlay-at-point)))
 
 (defun sa-is-self-insert-command()
@@ -60,8 +60,9 @@
   "get args for function at point"
   (gethash (intern (thing-at-point 'symbol)) hash))
 
-(defun sa-is-known-function-at-point()
-  (not (eq nil (sa-for-at-point))))
+(defun sa-is-known-function-behind-point()
+  (and (eq (point) (cdr (bounds-of-thing-at-point 'symbol)))
+       (not (eq nil (sa-for-at-point)))))
 
 (defun sa-create-two-spaces-at-point ()
   (insert "  ")
