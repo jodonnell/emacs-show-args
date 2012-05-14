@@ -1,9 +1,26 @@
 (defvar hash (make-hash-table))
 (puthash 'redirect_to "Hash | Record | String | Proc | :back, {:status :flash :notice :alert}" hash)
-(puthash 'form_for "record, {:url :namespace :html :method :format :as :remote}, &proc" hash)
 (puthash 'render "{:action :layout :partial :template :file :text :xml :json :inline :js :nothing :update}, {:locals :status :object :collection :as :spacer_template}, &proc" hash)
 
 (puthash 'image_tag "source, {:alt :size'wxh' :mouseover html_options}" hash)
+
+(puthash 'form_for "record, {:url :namespace :html :method :format :as :remote}, &proc" hash)
+(puthash 'check_box "object_name(not needed when called on form builder), method(should return integer), {html_options}, checked_value='1', unchecked_value='0'" hash)
+(puthash 'email_field "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'fields_for "record_name, record_object = nil, options = {}, &proc" hash)
+(puthash 'file_field "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'hidden_field "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'label "object_name(not needed when called on form builder), method, content_or_options=nil, {html_options}, &proc" hash)
+(puthash 'number_field "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'password_field "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'phone_field "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'radio_button "object_name(not needed when called on form builder), method, tag_value(string to set checked to), {html_options}" hash)
+(puthash 'range_field "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'search_field "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'telephone_field "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'text_area "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'text_field "object_name(not needed when called on form builder), method, {html_options}" hash)
+(puthash 'url_field "object_name(not needed when called on form builder), method, {html_options}" hash)
 
 (puthash 'button_tag "content_or_options, {:confirm :disabled :disabled_with html_options}, &proc" hash)
 (puthash 'check_box_tag "name, value='1', checked=false, {:disabled html_options}" hash)
@@ -27,6 +44,9 @@
 (puthash 'text_area_tag "name, content=nil, {:size :rows :cols :disabled :escape html_options}" hash)
 (puthash 'text_field_tag "name, value=nil, {:disabled :size :maxlength :placeholder html_options}" hash)
 (puthash 'url_field_tag "name, value=nil, {:disabled :size :maxlength :placeholder html_options}" hash)
+
+
+
 (puthash 'test_one_arg "string" hash)
 
 (defvar sa-overlay nil)
