@@ -136,15 +136,3 @@
      (insert "m")
      (assert-nil sa-overlay))))
 
-(deftest "weird bug"
-  (before-and-after 
-   (lambda()
-     (ruby-mode)
-     (insert "redirect_to")
-     (sa-create-functions-overlay-at-point)
-     (backward-word 1)
-     (delete-char 1)
-     (insert "t")
-     (move-beginning-of-line 1)
-     (assert-t (looking-at (regexp-quote "redirect_to"))))))
-
