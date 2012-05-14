@@ -40,9 +40,6 @@
 (defvar sa-overlay-line-number nil
   "The line the show args overlay is on, used to determine when to clear the overlay")
 
-(defvar sa-point-at-which-to-delete nil
-  "The position of point before the command, used to delete char at as a cleanup")
-
 (defvar sa-point-at-know-function nil)
 
 (defface sa-face
@@ -67,7 +64,6 @@
   (make-variable-buffer-local 'sa-point-at-know-function)
   (make-variable-buffer-local 'sa-overlay-line-number)
   (make-variable-buffer-local 'sa-overlay)
-  (make-variable-buffer-local 'sa-point-at-which-to-delete)
   (add-hook 'after-change-functions 'sa-abort-if-not-space-or-open-paren nil t)
   (add-hook 'post-command-hook 'sa-show-args-if-function nil t)
   (add-hook 'pre-command-hook 'sa-set-before-command-point-and-line nil t)
@@ -102,7 +98,8 @@
 
 (defun sa-create-two-spaces-at-point ()
   (insert "  ")
-  (backward-char 2))
+  (backward-char 2)
+  (put-text-property (point) (+ 2 (point)) 'sa-extra-space t))
 
 (defun sa-create-overlay-at-point ()
   (setq sa-overlay (make-overlay (+ 1 (point)) (+ 2 (point))))
@@ -113,7 +110,6 @@
 (defun sa-create-functions-overlay-at-point ()
   (sa-cleanup)
   (sa-create-two-spaces-at-point)
-  (setq sa-point-at-which-to-delete (point))
   (setq sa-point-at-know-function t)
   (sa-create-overlay-at-point))
 
@@ -179,11 +175,9 @@
   (delete-overlay sa-overlay)
   (setq sa-overlay nil)
   
-  (if sa-point-at-which-to-delete
-      (progn
-        (save-excursion
-          (goto-char sa-point-at-which-to-delete)
-          (delete-char 1)))
-    (delete-char 1)))
+  (save-excursion
+    (while (text-property-any (point-min) (point-max) 'sa-extra-space t)
+      (goto-char (text-property-any (point-min) (point-max) 'sa-extra-space t))
+      (delete-char 1))))
 
 (provide 'show-args)
