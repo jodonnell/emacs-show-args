@@ -37,6 +37,12 @@
 (defvar show-args-mode-hook nil
   "Hook for `show-args-mode'.")
 
+(defvar sa-overlay-line-number nil
+  "The line the show args overlay is on, used to determine when to clear the overlay")
+
+(defvar sa-point-at-which-to-delete nil
+  "The position of point before the command, used to delete char at as a cleanup")
+
 (defvar sa-point-at-know-function nil)
 
 (defface sa-face
@@ -53,25 +59,28 @@
     (sa-turn-off-mode)))
 
 (defun sa-turn-off-mode()
-  (remove-hook 'pre-command-hook 'sa-cleanup-if-not-self-insert t)
+  (remove-hook 'pre-command-hook 'sa-set-before-command-point-and-line t)
   (remove-hook 'after-change-functions 'sa-abort-if-not-space-or-open-paren t)
   (remove-hook 'post-command-hook 'sa-show-args-if-function t))
 
 (defun sa-turn-on-mode()
+  (make-variable-buffer-local 'sa-point-at-know-function)
+  (make-variable-buffer-local 'sa-overlay-line-number)
+  (make-variable-buffer-local 'sa-overlay)
+  (make-variable-buffer-local 'sa-point-at-which-to-delete)
   (add-hook 'after-change-functions 'sa-abort-if-not-space-or-open-paren nil t)
   (add-hook 'post-command-hook 'sa-show-args-if-function nil t)
-  (add-hook 'pre-command-hook 'sa-cleanup-if-not-self-insert nil t)
+  (add-hook 'pre-command-hook 'sa-set-before-command-point-and-line nil t)
   (run-hooks 'show-args-mode-hook))
 
-(defun sa-cleanup-if-not-self-insert()
-  "This is run when an overlay is shown and you do a command that is not inserting chars"
-  (if (and (overlayp sa-overlay)
-           (and
-            (not (sa-is-self-insert-command))
-            (not (sa-prehook-dont-clean))))
-      (sa-cleanup)))
+(defun sa-set-before-command-point-and-line()
+  (setq sa-overlay-line-number (line-number-at-pos)))
 
 (defun sa-show-args-if-function()
+  (if (and (overlayp sa-overlay)
+           (not (eq sa-overlay-line-number (line-number-at-pos))))
+      (sa-cleanup))
+
   (if (and (sa-is-self-insert-command)
            (sa-is-word-at-point)
            (sa-is-known-function-behind-point))
@@ -104,15 +113,10 @@
 (defun sa-create-functions-overlay-at-point ()
   (sa-cleanup)
   (sa-create-two-spaces-at-point)
+  (setq sa-point-at-which-to-delete (point))
   (setq sa-point-at-know-function t)
   (sa-create-overlay-at-point))
 
-(defun sa-prehook-dont-clean() 
-  (or (eq this-command 'backward-delete-char-untabify)
-      (eq this-command 'delete-backward-char)
-      (eq this-command 'backward-kill-word)))
-  ; they have hit backspace
-  ; they are awaiting first keystroke function that can be space or open paren
 
 (defun sa-overlay-insert-key-hook(overlay after begin end &optional length-replaced)
   "This hook is called when you type in front of the args overlay"
@@ -123,7 +127,6 @@
   (if (sa-did-replace-space-or-comma overlay begin end)
       (sa-delete-first-char-in-overlay overlay)
     (sa-remove-part-of-overlay overlay begin end)))
-
   
 (defun sa-remove-part-of-overlay(overlay begin end)
   (sa-move-overlay-foward-one overlay)
@@ -175,6 +178,12 @@
 (defun sa-cleanup-overlay()
   (delete-overlay sa-overlay)
   (setq sa-overlay nil)
-  (delete-char 1))
+  
+  (if sa-point-at-which-to-delete
+      (progn
+        (save-excursion
+          (goto-char sa-point-at-which-to-delete)
+          (delete-char 1)))
+    (delete-char 1)))
 
 (provide 'show-args)
