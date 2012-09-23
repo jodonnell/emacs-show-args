@@ -141,7 +141,8 @@
 (defun sa-overlay-insert-key-hook(overlay after begin end &optional length-replaced)
   "This hook is called when you type in front of the args overlay"
   (if after
-      (sa-overlay-key-hit overlay begin end)))
+      (let ((inhibit-modification-hooks t))
+        (sa-overlay-key-hit overlay begin end))))
 
 (defun sa-overlay-key-hit(overlay begin end)
   (if (sa-did-replace-space-or-comma overlay begin end)
