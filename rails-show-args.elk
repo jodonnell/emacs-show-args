@@ -64,7 +64,6 @@
 (deftest "it will clean up if you type anything other than a space or open paren"
   (before-and-after 
    (lambda()
-     (ruby-mode)
      (insert "redirect_to")
      (sa-create-functions-overlay-at-point) 
      (insert "a")
@@ -130,6 +129,7 @@
   (before-and-after 
    (lambda()
      (ruby-mode)
+     (show-args-mode)
      (insert "test_one_arg")
      (sa-create-functions-overlay-at-point)
      (insert " ")
