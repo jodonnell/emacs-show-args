@@ -89,14 +89,14 @@
   (make-variable-buffer-local 'sa-completions-hash)
   (sa-rails-completions)
   (add-hook 'after-change-functions 'sa-abort-if-not-space-or-open-paren nil t)
-  (add-hook 'post-command-hook 'sa-show-args-if-function nil t)
+  (add-hook 'post-command-hook 'sa-show-args-if-function-clear-old-overlays nil t)
   (add-hook 'pre-command-hook 'sa-set-before-command-point-and-line nil t)
   (run-hooks 'show-args-mode-hook))
 
 (defun sa-set-before-command-point-and-line()
   (setq sa-overlay-line-number (line-number-at-pos)))
 
-(defun sa-show-args-if-function()
+(defun sa-show-args-if-function-clear-old-overlays()
   (if (and (overlayp sa-overlay)
            (not (eq sa-overlay-line-number (line-number-at-pos))))
       (sa-cleanup))
