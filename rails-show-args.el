@@ -48,6 +48,8 @@
   (puthash 'url_field_tag "name, value=nil, {:disabled :size :maxlength :placeholder html_options}" sa-completions-hash)
 
 
+  (puthash 'validate "*symbols_pointing_to_methods, &block-validation" sa-completions-hash)
+  (puthash 'validates_presence_of "*attr_names" sa-completions-hash)
 
   (puthash 'test_one_arg "string" sa-completions-hash))
 
